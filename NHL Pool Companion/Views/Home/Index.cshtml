@@ -1,0 +1,247 @@
+﻿@model List<NHL_Pool_Companion.Models.Player>
+@{
+    ViewBag.Title = "Home Page";
+    var hidePicked = false;
+}
+@if (Model != null && Model.Count > 0)
+{
+    <div class="row">
+        <div class="col-sm-4">
+            <input id="txtPlayerName" type="text" onkeyup="filterPlayerName();" style="width:200px" placeholder="Filter player..." />
+        </div>
+        <div class="col-sm-1">
+            <select id="ddlPlayerPosition" onchange="filterPlayerPosition();">
+                <option value="all">Show All</option>
+                <option value="forward">Fowards</option>
+                <option value="defense">Defense</option>
+                <option value="goalie">Goalies</option>
+            </select>
+        </div>
+        <div class="col-sm-1">
+            <input type="button" value="Reset" onclick="ResetPlayerTable()"/>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-4">
+            <p>
+                <label for="salary">Salary range:</label>
+                <input type="text" id="salary" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            </p>
+            <div id="slider-range-salary"></div>
+        </div>
+        <div class="col-sm-4">
+            <p>
+                <label for="games">Games played:</label>
+                <input type="text" id="games" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            </p>
+            <div id="slider-range-games"></div>
+        </div>
+        <div class="col-sm-4">
+            <p>
+                <label for="games">Points:</label>
+                <input type="text" id="points" readonly style="border:0; color:#f6931f; font-weight:bold;">
+            </p>
+            <div id="slider-range-points"></div>
+        </div>
+    </div>
+
+    <table class="table tablesorter" id="playerTable">
+        <thead>
+            <tr>
+                <th></th>
+                @*<th>ID</th>*@
+                <th>Name</th>
+                <th>Team</th>
+                <th>Position</th>
+                <th>Salary</th>
+                <th>GamesPlayed</th>                
+                <th class="stats-skaters">PPG</th>
+                <th class="stats-skaters">Points</th>                                
+                <th class="stats-skaters">Goals</th>
+                <th class="stats-skaters">Assits</th>
+                <th class="stats-skaters">PlusMinus</th>
+                <th class="stats-goalies">Wins</th>
+                <th class="stats-goalies">Losses</th>
+                <th class="stats-goalies">OT Losses</th>
+                <th class="stats-goalies">ShutOut</th>
+                <th>Cost</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var player in Model.Where(p => p.Statistics != null && p.Statistics.First().GamesPlayed > 10))
+            {
+                var stats = player.Statistics.FirstOrDefault();
+                var pickedHide = hidePicked ? ( player.Picked ? "display:none;" : "") : "";
+                var pointsTotal = stats.Goals * 2.0 + stats.Assits * 2.0;
+                var pointsPerGame = pointsTotal / (stats.GamesPlayed);
+                var hasContract = player.Salary > 0;
+                var salary = hasContract ? player.Salary : 3000000;
+                var pointsSalary = 0.0;
+                if(player.Position != NHL_Pool_Companion.Models.Position.Goalie)
+                {
+                    pointsSalary = salary / pointsTotal;
+                }
+                else
+                {
+                    pointsSalary = stats.Wins == 0 ? 0 : salary / stats.Wins;
+                }
+
+
+                <tr
+                    style="@pickedHide"
+                    data-player-salary="@salary"
+                    data-player-id="@player.PlayerID"
+                    data-player-picked="@player.Picked"
+                    data-player-position="@player.Position"
+                    data-player-name="@player.PlayerName.ToLower()"
+                    data-player-points="@pointsTotal"
+                    data-player-games="@stats.GamesPlayed"
+                    data-player-contract="@hasContract"
+                >
+                    <td>
+                        @using(Ajax.BeginForm("PickPlayer",
+                            new AjaxOptions()
+                            {
+                                HttpMethod = "POST",
+                                Confirm = "Are you sure the player is picked",
+                                OnSuccess = "PickPlayerSuccess"
+                            }))
+                        {
+                            @Html.Hidden("PlayerID", player.PlayerID)
+                            <input type="submit" value="<"/>
+                        }
+                    </td>
+                    <td>@player.PlayerName</td>
+                    <td>@player.Team</td>
+                    <td>@player.Position</td>                  
+                    <td class="text-right">@String.Format("{0:0.000}",  salary /1000000.0 )</td>
+                    <td class="text-right">@stats.GamesPlayed</td>
+                    <td class="stats-skaters text-right">@String.Format("{0:0.00}", pointsPerGame)</td>
+                    <td class="stats-skaters text-right">@pointsTotal</td>                        
+                    <td class="stats-skaters text-right">@stats.Goals</td>
+                    <td class="stats-skaters text-right">@stats.Assits</td>
+                    <td class="stats-skaters text-right">@stats.PlusMinus</td>
+                    <td class="stats-goalies text-right">@stats.Wins</td>
+                    <td class="stats-goalies text-right">@stats.Losses</td>
+                    <td class="stats-goalies text-right">@stats.OverTimeLosses</td>
+                    <td class="stats-goalies text-right">@stats.ShutOut</td>
+                    <td class="text-right">@String.Format("{0:0.00}", pointsSalary)</td>
+                </tr>
+            }
+        </tbody>        
+    </table>
+}
+@section scripts
+{
+    <script type="text/javascript">
+
+        function ResetPlayerTable() {
+            $("#playerTable tbody tr").show();
+        }
+        function RegisterSlider(slider, min, max, steps, multiplier) {
+            $("#slider-range-"+slider).slider({
+                range: true,
+                min: min,
+                max: max,
+                values: [ min, max ],
+                step: steps,
+                slide: function( event, ui ) {
+                    $("#" + slider).val(ui.values[ 0 ] + " - " + ui.values[ 1 ]);
+                    var minVal =  parseInt(ui.values[0]) * multiplier;
+                    var maxVal =  parseInt(ui.values[1]) * multiplier;
+                    $("#playerTable tbody tr:visible").each(function(){
+                        var val = parseInt($(this).data("player-"+slider));
+                        if(val < minVal || val > maxVal)
+                        {
+                            $(this).hide();
+                        }
+                    });
+                    
+                }
+            });
+            $("#"+slider).val($( "#slider-range-"+slider ).slider( "values", 0 ) +
+                " - " + $( "#slider-range-"+slider ).slider( "values", 1 ));
+        }
+        $(document).ready(function () {
+            $("#playerTable").tablesorter();
+
+            RegisterSlider("games", 0, 100, 1, 1);
+            RegisterSlider("salary", 0, 20, 0.001, 1000000);
+            RegisterSlider("points", 0, 200, 1, 1);
+
+        });
+
+        function filterPlayerName()
+        {
+            var hidePicked = @hidePicked.ToString().ToLower();
+            var hideText = "";
+            if(hidePicked)
+            {
+                hideText = ":not([data-player-picked='True'])";
+            }
+            var text = $("#txtPlayerName").val().toLowerCase();
+            $("#playerTable tbody tr").show();
+            $('#playerTable .stats-goalies').show();
+            $('#playerTable .stats-skaters').show();
+            if(text != "")
+            {
+                $("#playerTable tbody tr").hide();
+                $("#playerTable tbody tr[data-player-name*='" + text + "']" + hideText).show();
+            }
+        }
+
+        function filterPlayerPosition() {
+
+            var hidePicked = @hidePicked.ToString().ToLower();
+            var hideText = "";
+            if(hidePicked)
+            {
+                hideText = ":not([data-player-picked='True'])";
+            }
+
+            var position = $("#ddlPlayerPosition").val();
+            $("#playerTable tbody tr").hide();
+            switch(position)
+            {
+                case "all":
+                    $("#playerTable tbody tr" + hideText).show();
+                    $('#playerTable .stats-goalies').show();
+                    $('#playerTable .stats-skaters').show();
+                    break;
+                case "forward":
+                    $('#playerTable .stats-goalies').hide();
+                    $('#playerTable .stats-skaters').show();
+                    $("#playerTable tbody tr[data-player-position='Forward']" + hideText).show();
+                    break;
+                case "defense":
+                    $('#playerTable .stats-goalies').hide();
+                    $('#playerTable .stats-skaters').show();
+                    $("#playerTable tbody tr[data-player-position='Defence']" + hideText).show();
+                    break;
+                case "goalie":
+                    $('#playerTable .stats-goalies').show();
+                    $('#playerTable .stats-skaters').hide();
+                    $("#playerTable tbody tr[data-player-position='Goalie']" + hideText).show();
+                    break;
+            }
+        }
+
+        function PickPlayerSuccess(data)
+        {
+            if (data.success)
+            {
+                $("tr[data-player-id='" + data.PlayerID + "']").hide();
+            }
+            else
+            {
+                if(data.ErrorMessage != "")
+                {
+                    alert(data.ErrorMessage);
+                }
+            }
+        }
+
+      
+    </script>
+   
+}
