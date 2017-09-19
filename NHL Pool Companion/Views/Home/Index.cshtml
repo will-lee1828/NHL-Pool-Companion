@@ -244,7 +244,8 @@
         {
             if (data.success)
             {
-                $("tr[data-player-id='" + data.PlayerID + "']").hide();
+                var picked = $("tr[data-player-id='" + data.PlayerID + "']").attr("data-player-picked") == "True" ? "False" : "True";
+                $("tr[data-player-id='" + data.PlayerID + "']").attr("data-player-picked", picked);
             }
             else
             {
