@@ -44,31 +44,31 @@
             <div id="slider-range-points"></div>
         </div>
     </div>
-
-    <table class="table tablesorter" id="playerTable">
-        <thead>
-            <tr>
-                <th></th>
-                @*<th>ID</th>*@
-                <th>Name</th>
-                <th>Team</th>
-                <th>Position</th>
-                <th>Salary</th>
-                <th>GamesPlayed</th>                
-                <th class="stats-skaters">PPG</th>
-                <th class="stats-skaters">Points</th>                                
-                <th class="stats-skaters">Goals</th>
-                <th class="stats-skaters">Assits</th>
-                <th class="stats-skaters">PlusMinus</th>
-                <th class="stats-goalies">Wins</th>
-                <th class="stats-goalies">Losses</th>
-                <th class="stats-goalies">OT Losses</th>
-                <th class="stats-goalies">ShutOut</th>
-                <th>Cost</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var player in Model.Where(p => p.Statistics != null && p.Statistics.First().GamesPlayed > 10))
+    <div style="position:relative;">
+        <table class="table tablesorter" id="playerTable">
+            <thead>
+                <tr>
+                    <th></th>
+                    @*<th>ID</th>*@
+                    <th>Name</th>
+                    <th>Team</th>
+                    <th>Position</th>
+                    <th>Salary</th>
+                    <th>GamesPlayed</th>
+                    <th class="stats-skaters">PPG</th>
+                    <th class="stats-skaters">Points</th>
+                    <th class="stats-skaters">Goals</th>
+                    <th class="stats-skaters">Assits</th>
+                    <th class="stats-skaters">PlusMinus</th>
+                    <th class="stats-goalies">Wins</th>
+                    <th class="stats-goalies">Losses</th>
+                    <th class="stats-goalies">OT Losses</th>
+                    <th class="stats-goalies">ShutOut</th>
+                    <th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in Model.Where(p => p.Statistics != null && p.Statistics.First().GamesPlayed > 10))
             {
                 var stats = player.Statistics.FirstOrDefault();
                 var pickedHide = hidePicked ? ( player.Picked ? "display:none;" : "") : "";
@@ -87,19 +87,17 @@
                 }
 
 
-                <tr
-                    style="@pickedHide"
-                    data-player-salary="@salary"
-                    data-player-id="@player.PlayerID"
-                    data-player-picked="@player.Picked"
-                    data-player-position="@player.Position"
-                    data-player-name="@player.PlayerName.ToLower()"
-                    data-player-points="@pointsTotal"
-                    data-player-games="@stats.GamesPlayed"
-                    data-player-contract="@hasContract"
-                >
-                    <td>
-                        @using(Ajax.BeginForm("PickPlayer",
+            <tr style="@pickedHide"
+                data-player-salary="@salary"
+                data-player-id="@player.PlayerID"
+                data-player-picked="@player.Picked"
+                data-player-position="@player.Position"
+                data-player-name="@player.PlayerName.ToLower()"
+                data-player-points="@pointsTotal"
+                data-player-games="@stats.GamesPlayed"
+                data-player-contract="@hasContract">
+                <td>
+                    @using(Ajax.BeginForm("PickPlayer",
                             new AjaxOptions()
                             {
                                 HttpMethod = "POST",
@@ -107,36 +105,73 @@
                                 OnSuccess = "PickPlayerSuccess"
                             }))
                         {
-                            @Html.Hidden("PlayerID", player.PlayerID)
-                            <input type="submit" value="<"/>
+                        @Html.Hidden("PlayerID", player.PlayerID)
+                        <input type="submit" value="<" />
                         }
-                    </td>
-                    <td>@player.PlayerName</td>
-                    <td>@player.Team</td>
-                    <td>@player.Position</td>                  
-                    <td class="text-right">@String.Format("{0:0.000}",  salary /1000000.0 )</td>
-                    <td class="text-right">@stats.GamesPlayed</td>
-                    <td class="stats-skaters text-right">@String.Format("{0:0.00}", pointsPerGame)</td>
-                    <td class="stats-skaters text-right">@pointsTotal</td>                        
-                    <td class="stats-skaters text-right">@stats.Goals</td>
-                    <td class="stats-skaters text-right">@stats.Assits</td>
-                    <td class="stats-skaters text-right">@stats.PlusMinus</td>
-                    <td class="stats-goalies text-right">@stats.Wins</td>
-                    <td class="stats-goalies text-right">@stats.Losses</td>
-                    <td class="stats-goalies text-right">@stats.OverTimeLosses</td>
-                    <td class="stats-goalies text-right">@stats.ShutOut</td>
-                    <td class="text-right">@String.Format("{0:0.00}", pointsSalary)</td>
-                </tr>
+                </td>
+                <td>@player.PlayerName</td>
+                <td>@player.Team</td>
+                <td>@player.Position</td>
+                <td class="text-right">@String.Format("{0:0.000}",  salary /1000000.0 )</td>
+                <td class="text-right">@stats.GamesPlayed</td>
+                <td class="stats-skaters text-right">@String.Format("{0:0.00}", pointsPerGame)</td>
+                <td class="stats-skaters text-right">@pointsTotal</td>
+                <td class="stats-skaters text-right">@stats.Goals</td>
+                <td class="stats-skaters text-right">@stats.Assits</td>
+                <td class="stats-skaters text-right">@stats.PlusMinus</td>
+                <td class="stats-goalies text-right">@stats.Wins</td>
+                <td class="stats-goalies text-right">@stats.Losses</td>
+                <td class="stats-goalies text-right">@stats.OverTimeLosses</td>
+                <td class="stats-goalies text-right">@stats.ShutOut</td>
+                <td class="text-right">@String.Format("{0:0.00}", pointsSalary)</td>
+            </tr>
             }
-        </tbody>        
-    </table>
+            </tbody>
+        </table>        
+    </div>
 }
 @section scripts
 {
     <script type="text/javascript">
-
+        var timers = {};
         function ResetPlayerTable() {
             $("#playerTable tbody tr").show();
+        }
+        function delayShowData(slider, multiplier, ui) {
+            clearTimeout(timers[slider]);
+            timers[slider] = setTimeout(function () {
+                $("#" + slider).val(ui.values[0] + " - " + ui.values[1]);
+                var minVal = parseInt(ui.values[0]) * multiplier;
+                var maxVal = parseInt(ui.values[1]) * multiplier;
+
+                var rangeGames = $("#slider-range-games").slider("values");
+                var rangeSalary = $("#slider-range-salary").slider("values");
+                var rangePoints = $("#slider-range-points").slider("values");
+
+                $("#playerTable tbody tr").each(function () {
+                    var val = parseInt($(this).data("player-" + slider));
+                    console.log("player-" + slider + "---" + val)
+                    var playerGames = parseInt($(this).data("player-games"));
+                    var playerSalary = parseInt($(this).data("player-salary"));
+                    var playerPoints = parseInt($(this).data("player-points"));
+                    console.log("----------------------------------------");
+                    console.log(rangeGames);
+                    console.log(playerGames);
+                    console.log(rangeSalary);
+                    console.log(playerSalary);
+                    console.log(rangePoints);
+                    console.log(playerPoints);
+
+                    if (playerGames >= rangeGames[0] && playerGames <= rangeGames[1]
+                        && playerSalary >= rangeSalary[0] * 1000000 && playerSalary <= rangeSalary[1] * 1000000
+                        && playerPoints >= rangePoints[0] && playerPoints <= rangePoints[1]
+                    ) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }, 300);
         }
         function RegisterSlider(slider, min, max, steps, multiplier) {
             $("#slider-range-"+slider).slider({
@@ -146,17 +181,7 @@
                 values: [ min, max ],
                 step: steps,
                 slide: function( event, ui ) {
-                    $("#" + slider).val(ui.values[ 0 ] + " - " + ui.values[ 1 ]);
-                    var minVal =  parseInt(ui.values[0]) * multiplier;
-                    var maxVal =  parseInt(ui.values[1]) * multiplier;
-                    $("#playerTable tbody tr:visible").each(function(){
-                        var val = parseInt($(this).data("player-"+slider));
-                        if(val < minVal || val > maxVal)
-                        {
-                            $(this).hide();
-                        }
-                    });
-                    
+                    delayShowData(slider, multiplier, ui);                    
                 }
             });
             $("#"+slider).val($( "#slider-range-"+slider ).slider( "values", 0 ) +
