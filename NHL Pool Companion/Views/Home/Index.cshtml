@@ -141,26 +141,15 @@
             clearTimeout(timers[slider]);
             timers[slider] = setTimeout(function () {
                 $("#" + slider).val(ui.values[0] + " - " + ui.values[1]);
-                var minVal = parseInt(ui.values[0]) * multiplier;
-                var maxVal = parseInt(ui.values[1]) * multiplier;
 
                 var rangeGames = $("#slider-range-games").slider("values");
                 var rangeSalary = $("#slider-range-salary").slider("values");
                 var rangePoints = $("#slider-range-points").slider("values");
 
-                $("#playerTable tbody tr").each(function () {
-                    var val = parseInt($(this).data("player-" + slider));
-                    console.log("player-" + slider + "---" + val)
+                $("#playerTable tbody tr").each(function () {                    
                     var playerGames = parseInt($(this).data("player-games"));
                     var playerSalary = parseInt($(this).data("player-salary"));
                     var playerPoints = parseInt($(this).data("player-points"));
-                    console.log("----------------------------------------");
-                    console.log(rangeGames);
-                    console.log(playerGames);
-                    console.log(rangeSalary);
-                    console.log(playerSalary);
-                    console.log(rangePoints);
-                    console.log(playerPoints);
 
                     if (playerGames >= rangeGames[0] && playerGames <= rangeGames[1]
                         && playerSalary >= rangeSalary[0] * 1000000 && playerSalary <= rangeSalary[1] * 1000000
